@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const router = require('./routers/userRouter');
+const categoryRouter = require('./routers/categoryRouter');
 
 const app = express();
 
@@ -21,6 +22,7 @@ db.once('open', () => {
 
 // Routes
 app.use('/api', router);
+app.use('/api', categoryRouter);
 
 // Start the server
 const port = process.env.PORT || 3001;
