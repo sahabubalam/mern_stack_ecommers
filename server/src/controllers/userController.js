@@ -1,5 +1,5 @@
 
-const User = require('../models/user');
+const User = require('../models/User');
 
 const createUser = async (req, res) => {
   try {
@@ -47,10 +47,71 @@ const getUserById = async (req, res) => {
       res.status(500).json({ error: 'An error occurred while updating the user.' });
     }
   };
+  // controllers/userController.js
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+
+
+// Controller for user registration
+const registerUser = async (req, res) => {
+    console.log({S:req.body});
+    try {
+      const { username, password } = req.body;
+  console.log({password:password});
+  console.log({username:username});
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username already exists.' });
+      }
+      if (!password || typeof password !== "string") {
+        throw Error("Password is required");
+    }
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const newUser = new User({ username, password: hashedPassword });
+      await newUser.save();
+  
+      res.status(201).json({ message: 'User registered successfully.' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred during registration.' });
+    }
+  };
+  const loginUser = async (req, res) => {
+    try {
+      const { username, password } = req.body;
+  
+      // Find the user by username
+      const user = await User.findOne({ username });
+  
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid username or password.' });
+      }
+  
+      // Check the password
+      const passwordMatch = await bcrypt.compare(password, user.password);
+  
+      if (!passwordMatch) {
+        return res.status(401).json({ error: 'Invalid username or password.' });
+      }
+  
+      // Generate a JWT token
+      const token = jwt.sign({ userId: user._id }, 'your-secret-key', {
+        expiresIn: '1h', // Token expiration time (adjust as needed)
+      });
+  
+      res.status(200).json({ token });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred during login.' });
+    }
+  };
 
 module.exports = {
   createUser,
   getAllUsers,
   getUserById,
-  updateUserById
+  updateUserById,
+  registerUser,
+  loginUser
 };
